@@ -2,7 +2,6 @@
 
 #### Questions
 # What should the name of this script be?
-    # Ask Rob
 
 # What will structure of az-msk-impact-2022 repo be? Sub-directory with mskimpact data or data at top level?
     # Ask Ben
@@ -53,7 +52,7 @@ if [ $? -gt 0 ] ; then
 fi
 
 # ------------------------------------------------------------------------------------------------------------------------
-# 3. Remove Part C non-consented patients + samples (use python2)
+# 3. Remove Part C non-consented patients + samples
 printTimeStampedDataProcessingStepMessage "subset and merge of MSK-IMPACT Part C Consented patients for AstraZeneca"
 
 # Create temporary directory to store subset file
@@ -107,8 +106,10 @@ if [ $? -gt 0 ] ; then
 rm -rf "$AZ_TMPDIR"
 
 # ------------------------------------------------------------------------------------------------------------------------
-# 4. Run changelog script (use python3)
-# Should the output file go to a specific directory/filename?
+# 4. Run changelog script
+printTimeStampedDataProcessingStepMessage "generate changelog for AstraZeneca MSK-IMPACT updates"
+
+# TODO Should the output file go to a specific directory/filename?
 $PYTHON3_BINARY $PORTAL_HOME/scripts/changelog.py $AZ_MSK_IMPACT_DATA_HOME
 
 if [ $? -gt 0 ] ; then
