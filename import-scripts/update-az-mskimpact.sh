@@ -100,7 +100,7 @@ rm -rf "$AZ_TMPDIR"
 # 4. Run changelog script
 printTimeStampedDataProcessingStepMessage "generate changelog for AstraZeneca MSK-IMPACT updates"
 
-$PYTHON3_BINARY $PORTAL_HOME/scripts/changelog.py $AZ_MSK_IMPACT_DATA_HOME
+$PYTHON3_BINARY $PORTAL_HOME/scripts/generate_az_study_changelog.py $AZ_MSK_IMPACT_DATA_HOME
 
 if [ $? -gt 0 ] ; then
     echo "Error! Failed to generate changelog summary for AstraZeneca MSK-Impact subset."
