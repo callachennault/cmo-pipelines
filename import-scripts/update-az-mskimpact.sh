@@ -9,6 +9,7 @@
     # unit tests will go with it
 
 # python requirements?
+
 export AZ_DATA_HOME=$PORTAL_DATA_HOME/az-msk-impact-2022
 export AZ_MSK_IMPACT_DATA_HOME=$AZ_DATA_HOME/mskimpact
 export AZ_TMPDIR=$AZ_DATA_HOME/tmp
@@ -81,6 +82,9 @@ if [ $? -gt 0 ] ; then
     exit 1
 fi
 
+# copy into a tmp directory and then subset it out there, output final files directly into what I'm going to push
+# TODO maybe don't write out to the same directory ?
+# Copy into tmp directory then merge off of the tmp directory
 # Write out the subsetted data
 $PYTHON_BINARY $PORTAL_HOME/scripts/merge.py \
     --study-id="mskimpact" \
@@ -101,6 +105,7 @@ if [ $? -gt 0 ] ; then
 
     exit 1
 fi
+
 # Remove temporary directory now that the subset has been merged
 rm -rf "$AZ_TMPDIR"
 
@@ -118,8 +123,9 @@ if [ $? -gt 0 ] ; then
     EMAIL_BODY="Failed to generate changelog summary for AstraZeneca MSK-Impact subset"
     echo -e "Sending email $EMAIL_BODY"
     echo -e "$EMAIL_BODY" |  mail -s "AstraZeneca MSK-IMPACT Changelog Failure: Changelog summary will not be provided." $PIPELINES_EMAIL_LIST
+
+    exit 1
 fi
-# TODO Should data still be pushed if changelog script fails?
 
 # ------------------------------------------------------------------------------------------------------------------------
 # 5. Push the updates data to GitHub
@@ -141,3 +147,4 @@ if [ $? -gt 0 ] ; then
 fi
 
 # TODO Send a message on success
+sendImportSuccessMessageMskPipelineLogsSlack "ASTRAZENECA MSKIMPACT"
