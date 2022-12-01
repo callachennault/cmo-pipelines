@@ -1,15 +1,5 @@
 #!/bin/bash
 
-#### Questions
-# What should the name of this script be?
-
-# ------------------------------------------------------------------------
-
-# When do I add changelog script to cmo-pipelines repo? in my fork?
-    # unit tests will go with it
-
-# python requirements?
-
 export AZ_DATA_HOME=$PORTAL_DATA_HOME/az-msk-impact-2022
 export AZ_MSK_IMPACT_DATA_HOME=$AZ_DATA_HOME/mskimpact
 export AZ_TMPDIR=$AZ_DATA_HOME/tmp
@@ -34,7 +24,18 @@ fi
 # ------------------------------------------------------------------------------------------------------------------------
 # 2. Copy data from local clone of MSK Solid Heme repo to local clone of AZ repo
 
-cp -r $MSK_SOLID_HEME_DATA_HOME/* $AZ_MSK_IMPACT_DATA_HOME
+# Create temporary directory to store data before subsetting
+if ! [ -d "$AZ_TMPDIR" ] ; then
+    if ! mkdir -p "$AZ_TMPDIR" ; then
+        echo "Error : could not create tmp directory '$AZ_TMPDIR'" >&2
+        exit 1
+    fi
+fi
+if [[ -d "$AZ_TMPDIR" && "$AZ_TMPDIR" != "/" ]] ; then
+    rm -rf "$AZ_TMPDIR"/*
+fi
+
+cp -r $MSK_SOLID_HEME_DATA_HOME/* $AZ_TMPDIR
 
 if [ $? -gt 0 ] ; then
     echo "ERROR! Failed to copy MSK-IMPACT data to AstraZeneca repo. Skipping subset, merge, and update of AstraZeneca MSK-IMPACT!"
@@ -51,21 +52,10 @@ fi
 # 3. Remove Part C non-consented patients + samples
 printTimeStampedDataProcessingStepMessage "subset and merge of MSK-IMPACT Part C Consented patients for AstraZeneca"
 
-# Create temporary directory to store subset file
-if ! [ -d "$AZ_TMPDIR" ] ; then
-    if ! mkdir -p "$AZ_TMPDIR" ; then
-        echo "Error : could not create tmp directory '$AZ_TMPDIR'" >&2
-        exit 1
-    fi
-fi
-if [[ -d "$AZ_TMPDIR" && "$AZ_TMPDIR" != "/" ]] ; then
-    rm -rf "$AZ_TMPDIR"/*
-fi
-
 # Generate subset of Part C consented patients from MSK-Impact
 $PYTHON_BINARY $PORTAL_HOME/scripts/generate-clinical-subset.py \
     --study-id="mskimpact" \
-    --clinical-file="$AZ_MSK_IMPACT_DATA_HOME/data_clinical_patient.txt" \
+    --clinical-file="$AZ_TMPDIR/data_clinical_patient.txt" \
     --filter-criteria="PARTC_CONSENTED_12_245=YES" \
     --subset-filename="$AZ_TMPDIR/az_msk_impact_subset.txt"
 
@@ -82,16 +72,13 @@ if [ $? -gt 0 ] ; then
     exit 1
 fi
 
-# copy into a tmp directory and then subset it out there, output final files directly into what I'm going to push
-# TODO maybe don't write out to the same directory ?
-# Copy into tmp directory then merge off of the tmp directory
 # Write out the subsetted data
 $PYTHON_BINARY $PORTAL_HOME/scripts/merge.py \
     --study-id="mskimpact" \
     --subset="$AZ_TMPDIR/az_msk_impact_subset.txt" \
     --output-directory="$AZ_MSK_IMPACT_DATA_HOME" \
     --merge-clinical="true" \
-    $AZ_MSK_IMPACT_DATA_HOME
+    $AZ_TMPDIR
 
 if [ $? -gt 0 ] ; then
     echo "Error! Failed to merge subset of MSK-IMPACT for AstraZeneca. Skipping update of AstraZeneca MSK-IMPACT!"
@@ -113,7 +100,6 @@ rm -rf "$AZ_TMPDIR"
 # 4. Run changelog script
 printTimeStampedDataProcessingStepMessage "generate changelog for AstraZeneca MSK-IMPACT updates"
 
-# TODO Should the output file go to a specific directory/filename?
 $PYTHON3_BINARY $PORTAL_HOME/scripts/changelog.py $AZ_MSK_IMPACT_DATA_HOME
 
 if [ $? -gt 0 ] ; then
@@ -133,7 +119,6 @@ printTimeStampedDataProcessingStepMessage "push of AstraZeneca data updates to g
 
 echo "Committing AstraZeneca MSK-IMPACT data"
 cd $AZ_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest AstraZeneca MSK-IMPACT dataset"
-
 cd $AZ_DATA_HOME ; $GIT_BINARY push origin
 
 if [ $? -gt 0 ] ; then
@@ -146,5 +131,5 @@ if [ $? -gt 0 ] ; then
     exit 1
 fi
 
-# TODO Send a message on success
+# Send a message on success
 sendImportSuccessMessageMskPipelineLogsSlack "ASTRAZENECA MSKIMPACT"
