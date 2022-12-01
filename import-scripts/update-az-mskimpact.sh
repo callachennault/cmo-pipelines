@@ -9,10 +9,11 @@
     # unit tests will go with it
 
 # python requirements?
-
 export AZ_DATA_HOME=$PORTAL_DATA_HOME/az-msk-impact-2022
 export AZ_MSK_IMPACT_DATA_HOME=$AZ_DATA_HOME/mskimpact
 export AZ_TMPDIR=$AZ_DATA_HOME/tmp
+
+source $PORTAL_HOME/scripts/dmp-import-vars-functions.sh
 
 # 1. Pull latest from AstraZeneca repo (mskcc/az-msk-impact-2022)
 printTimeStampedDataProcessingStepMessage "pull of AstraZeneca data updates to git repository"
@@ -32,7 +33,7 @@ fi
 # ------------------------------------------------------------------------------------------------------------------------
 # 2. Copy data from local clone of MSK Solid Heme repo to local clone of AZ repo
 
-cp -r $MSK_SOLID_HEME_DATA_HOME $AZ_MSK_IMPACT_DATA_HOME
+cp -r $MSK_SOLID_HEME_DATA_HOME/* $AZ_MSK_IMPACT_DATA_HOME
 
 if [ $? -gt 0 ] ; then
     echo "ERROR! Failed to copy MSK-IMPACT data to AstraZeneca repo. Skipping subset, merge, and update of AstraZeneca MSK-IMPACT!"
@@ -99,7 +100,7 @@ if [ $? -gt 0 ] ; then
     cd $AZ_DATA_HOME ; $GIT_BINARY reset HEAD --hard
 
     exit 1
-
+fi
 # Remove temporary directory now that the subset has been merged
 rm -rf "$AZ_TMPDIR"
 
@@ -117,7 +118,7 @@ if [ $? -gt 0 ] ; then
     EMAIL_BODY="Failed to generate changelog summary for AstraZeneca MSK-Impact subset"
     echo -e "Sending email $EMAIL_BODY"
     echo -e "$EMAIL_BODY" |  mail -s "AstraZeneca MSK-IMPACT Changelog Failure: Changelog summary will not be provided." $PIPELINES_EMAIL_LIST
-
+fi
 # TODO Should data still be pushed if changelog script fails?
 
 # ------------------------------------------------------------------------------------------------------------------------
