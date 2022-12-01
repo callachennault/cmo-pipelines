@@ -3,12 +3,6 @@
 #### Questions
 # What should the name of this script be?
 
-# What will structure of az-msk-impact-2022 repo be? Sub-directory with mskimpact data or data at top level?
-    # Ask Ben
-
-# Should we maintain any history of the changelog files? or let git do this?
-    # maybe ask AZ - accumulate files with timestamps or overwrite?
-
 # ------------------------------------------------------------------------
 
 # When do I add changelog script to cmo-pipelines repo? in my fork?
@@ -81,6 +75,8 @@ if [ $? -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
     echo -e "$EMAIL_BODY" | mail -s "AstraZeneca MSK-IMPACT Subset Failure: Study will not be updated." $PIPELINES_EMAIL_LIST
 
+    cd $AZ_DATA_HOME ; $GIT_BINARY reset HEAD --hard
+
     exit 1
 fi
 
@@ -99,6 +95,8 @@ if [ $? -gt 0 ] ; then
     EMAIL_BODY="Failed to merge subset of MSK-IMPACT for AstraZeneca"
     echo -e "Sending email $EMAIL_BODY"
     echo -e "$EMAIL_BODY" |  mail -s "AstraZeneca MSK-IMPACT Merge Failure: Study will not be updated." $PIPELINES_EMAIL_LIST
+
+    cd $AZ_DATA_HOME ; $GIT_BINARY reset HEAD --hard
 
     exit 1
 
@@ -126,6 +124,9 @@ if [ $? -gt 0 ] ; then
 # 5. Push the updates data to GitHub
 printTimeStampedDataProcessingStepMessage "push of AstraZeneca data updates to git repository"
 
+echo "Committing AstraZeneca MSK-IMPACT data"
+cd $AZ_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest AstraZeneca MSK-IMPACT dataset"
+
 cd $AZ_DATA_HOME ; $GIT_BINARY push origin
 
 if [ $? -gt 0 ] ; then
@@ -138,3 +139,4 @@ if [ $? -gt 0 ] ; then
     exit 1
 fi
 
+# TODO Send a message on success
