@@ -16,7 +16,7 @@ if [ $? -gt 0 ] ; then
 
     EMAIL_BODY="Failed to pull AstraZeneca incoming changes from Git - address ASAP!"
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "[URGENT] GIT PUSH FAILURE" $PIPELINES_EMAIL_LIST
+    echo -e "$EMAIL_BODY" | mail -s "[URGENT] GIT PULL FAILURE" $PIPELINES_EMAIL_LIST
 
     exit 1
 fi
@@ -44,6 +44,8 @@ if [ $? -gt 0 ] ; then
     EMAIL_BODY="Failed to copy MSK-IMPACT data to AstraZeneca repo. Subset study will not be updated."
     echo -e "Sending email $EMAIL_BODY"
     echo -e "$EMAIL_BODY" | mail -s "MSK-IMPACT Data Copy Failure: Study will not be updated." $PIPELINES_EMAIL_LIST
+
+    cd $AZ_DATA_HOME ; $GIT_BINARY reset HEAD --hard
 
     exit 1
 fi
@@ -110,6 +112,8 @@ if [ $? -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
     echo -e "$EMAIL_BODY" |  mail -s "AstraZeneca MSK-IMPACT Changelog Failure: Changelog summary will not be provided." $PIPELINES_EMAIL_LIST
 
+    cd $AZ_DATA_HOME ; $GIT_BINARY reset HEAD --hard
+
     exit 1
 fi
 
@@ -127,6 +131,8 @@ if [ $? -gt 0 ] ; then
     EMAIL_BODY="Failed to push AstraZeneca MSK-IMPACT outgoing changes to Git - address ASAP!"
     echo -e "Sending email $EMAIL_BODY"
     echo -e "$EMAIL_BODY" |  mail -s "[URGENT] GIT PUSH FAILURE" $PIPELINES_EMAIL_LIST
+
+    cd $AZ_DATA_HOME ; $GIT_BINARY reset HEAD --hard
 
     exit 1
 fi
