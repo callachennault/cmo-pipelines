@@ -225,6 +225,7 @@ class SampleDataHandler(DataHandler):
         #   CANCER_TYPE
         # Used to determine when a modified patient (for ex, a cancer type change) indicates a 'deleted patient'
         self.sample_df = pd.DataFrame()
+        self.unknown_cancer_type_label = 'Unknown Cancer Type'
 
         # Dict of <cancer_type> -> int patient count
         self.cancer_type_to_patient_count = {}
@@ -255,6 +256,10 @@ class SampleDataHandler(DataHandler):
             usecols=['PATIENT_ID', 'SAMPLE_ID', 'CANCER_TYPE'],
         )
 
+        self.sample_df['CANCER_TYPE'].fillna(
+            self.unknown_cancer_type_label, inplace=True
+        )
+
         # Get the number of patients + samples for each cancer type
         self.cancer_type_to_patient_count = (
             self.sample_df.groupby("CANCER_TYPE")["PATIENT_ID"].nunique().to_dict()
@@ -283,7 +288,11 @@ class SampleDataHandler(DataHandler):
         for mode, tokens in self.next_git_diff_line():
             patient_id = tokens[col_indices['PATIENT_ID']]
             sample_id = tokens[col_indices['SAMPLE_ID']]
-            cancer_type = tokens[col_indices['CANCER_TYPE']]
+            cancer_type = (
+                tokens[col_indices['CANCER_TYPE']]
+                if tokens[col_indices['CANCER_TYPE']]
+                else self.unknown_cancer_type_label
+            )
             sample_type = tokens[col_indices['SAMPLE_TYPE']]
             sample_class = tokens[col_indices['SAMPLE_CLASS']]
             current_sample = Sample(
