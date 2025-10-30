@@ -308,6 +308,38 @@ function filter_files_in_delivery_directory() {
     filenames_to_deliver[data_timeline_treatment.txt]+=1
     filenames_to_deliver[data_timeline_tsh_labs.txt]+=1
     filenames_to_deliver[data_timeline_tumor_sites.txt]+=1
+    filenames_to_deliver[case_lists]+=1
+
+    filenames_to_deliver[meta_clinical_patient.txt]+=1
+    filenames_to_deliver[meta_clinical_sample.txt]+=1
+    filenames_to_deliver[meta_CNA.txt]+=1
+    filenames_to_deliver[meta_gene_matrix.txt]+=1
+    filenames_to_deliver[meta_mutations_extended.txt]+=1
+    filenames_to_deliver[meta_study.txt]+=1
+    filenames_to_deliver[meta_sv.txt]+=1
+    filenames_to_deliver[mskimpact_meta_cna_hg19_seg.txt]+=1
+    filenames_to_deliver[meta_timeline_bmi.txt]+=1
+    filenames_to_deliver[meta_timeline_ca_125_labs.txt]+=1
+    filenames_to_deliver[meta_timeline_ca_15-3_labs.txt]+=1
+    filenames_to_deliver[meta_timeline_ca_19-9_labs.txt]+=1
+    filenames_to_deliver[meta_timeline_cancer_presence.txt]+=1
+    filenames_to_deliver[meta_timeline_cea_labs.txt]+=1
+    filenames_to_deliver[meta_timeline_diagnosis.txt]+=1
+    filenames_to_deliver[meta_timeline_ecog_kps.txt]+=1
+    filenames_to_deliver[meta_timeline_follow_up.txt]+=1
+    filenames_to_deliver[meta_timeline_gleason.txt]+=1
+    filenames_to_deliver[meta_timeline_mmr.txt]+=1
+    filenames_to_deliver[meta_timeline_pdl1.txt]+=1
+    filenames_to_deliver[meta_timeline_prior_meds.txt]+=1
+    filenames_to_deliver[meta_timeline_progression.txt]+=1
+    filenames_to_deliver[meta_timeline_psa_labs.txt]+=1
+    filenames_to_deliver[meta_timeline_radiation.txt]+=1
+    filenames_to_deliver[meta_timeline_specimen_surgery.txt]+=1
+    filenames_to_deliver[meta_timeline_specimen.txt]+=1
+    filenames_to_deliver[meta_timeline_surgery.txt]+=1
+    filenames_to_deliver[meta_timeline_treatment.txt]+=1
+    filenames_to_deliver[meta_timeline_tsh_labs.txt]+=1
+    filenames_to_deliver[meta_timeline_tumor_sites.txt]+=1
 
     # Remove any files/directories that are not specified above
     for filepath in $OUTPUT_DIR/* ; do
@@ -319,6 +351,17 @@ function filter_files_in_delivery_directory() {
         fi
     done
     return 0
+}
+
+function generate_case_lists() {
+    # Generate case lists based on our subset of patients + samples
+    CASE_LIST_DIR="$OUTPUT_DIR/case_lists"
+    if ! [ -d "$CASE_LIST_DIR" ] ; then
+        if ! mkdir -p "$CASE_LIST_DIR" ; then
+            return 1
+        fi
+    fi
+    $PYTHON_BINARY $IMPORT_SCRIPTS_DIR/generate_case_lists.py --case-list-config-file $CASE_LIST_CONFIG_FILE --case-list-dir $CASE_LIST_DIR --study-dir $OUTPUT_DIR --study-id mskimpact -o
 }
 
 function push_updates_to_git_repo() {
@@ -441,6 +484,11 @@ printTimeStampedDataProcessingStepMessage "Finalize and validate study contents"
 # Filter out files which are not delivered
 if ! filter_files_in_delivery_directory ; then
     report_error "Failed to filter non-delivered files"
+fi
+
+# Generate case list files
+if ! generate_case_lists ; then
+    report_error "Failed to generate case lists"
 fi
 
 printTimeStampedDataProcessingStepMessage "Push data to GitHub"
